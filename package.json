@@ -1,0 +1,14 @@
+{
+  "name": "3-legged-auth",
+  "version": "0.0.1",
+  "description": "Sample client for 3-legged OAuth",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Goh",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}
