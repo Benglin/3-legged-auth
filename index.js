@@ -78,7 +78,8 @@ app.get("/", function (req, res) {
             if (error) {
                 res.end(`Error: ${error.toString()}`);
             } else {
-                res.end(bodyJson);
+                let userData = JSON.parse(bodyJson);
+                res.end(userData.emailId);
             }
         });
 
