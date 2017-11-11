@@ -64,7 +64,28 @@ app.use(session({
 }));
 
 app.get("/", function (req, res) {
-    res.sendFile(path.join(__dirname, "login.html"));
+
+    if (req.session.storedAccessToken) {
+
+        let options = {
+            url: "https://developer.api.autodesk.com/userprofile/v1/users/@me",
+            headers: {
+                "Authorization": `Bearer ${req.session.storedAccessToken}`
+            }
+        };
+
+        request.get(options, function(error, response, bodyJson) {
+            if (error) {
+                res.end(`Error: ${error.toString()}`);
+            } else {
+                res.end(bodyJson);
+            }
+        });
+
+    } else {
+        res.sendFile(path.join(__dirname, "login.html"));
+    }
+
 });
 
 app.get("/oauth-callback", function (req, res) {
@@ -80,7 +101,8 @@ app.get("/oauth-callback", function (req, res) {
         }
 
         let accessToken = bodyJson.access_token;
-        res.send(accessToken);
+        req.session.storedAccessToken = accessToken;
+        res.redirect("/");
     });
 });
 
