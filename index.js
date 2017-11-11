@@ -9,7 +9,7 @@ const querystring = require('querystring');
 // =============================================================================
 
 function exchangeForAccessToken(authCode, callback) {
-    
+
     let requestData = {
 
         url: "https://developer.api.autodesk.com/authentication/v1/gettoken",
@@ -23,14 +23,23 @@ function exchangeForAccessToken(authCode, callback) {
         }
     };
 
-    request.post(requestData, function(error, response, body) {
+    request.post(requestData, function (error, response, bodyJson) {
 
         if (error) {
             callback(null, error);
             return;
         }
 
-        callback(body.toString(), null);
+        // 'bodyJson' is of the following structure:
+        // 
+        //  {
+        //      "access_token": "...",
+        //      "refresh_token": "...",
+        //      "token_type": "...",
+        //      "expires_in": "..."
+        //  }
+        // 
+        callback(JSON.parse(bodyJson), null);
     });
 }
 
@@ -50,14 +59,15 @@ app.get("/oauth-callback", function (req, res) {
     let authCode = req.query.code;
     console.log("Gotten authorization code: " + authCode);
 
-    exchangeForAccessToken(authCode, function(accessToken, error) {
+    exchangeForAccessToken(authCode, function (bodyJson, error) {
         if (error) {
             res.send(`Error received ${error}`);
             return;
         }
 
-        res.send(`No error, received ${accessToken}`);
-    });    
+        let accessToken = bodyJson.access_token;
+        res.send(accessToken);
+    });
 });
 
 app.listen(8088);
