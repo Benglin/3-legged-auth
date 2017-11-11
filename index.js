@@ -1,8 +1,42 @@
 
 const express = require("express");
 const path = require("path");
-const http = require("http");
+const request = require("request");
 const querystring = require('querystring');
+
+// =============================================================================
+// Helper/utility functions
+// =============================================================================
+
+function exchangeForAccessToken(authCode, redirectUrl,callback) {
+
+    let requestData = {
+
+        url: "https://developer.api.autodesk.com/authentication/v1/gettoken",
+
+        form: {
+            client_id: "G8gnbczTX6mBQAg1Air5qMxHlgpk0bs3",
+            client_secret: "K592544e7f3074d1",
+            grant_type: "authorization_code",
+            code: authCode,
+            redirect_uri: redirectUrl
+        }
+    };
+
+    request.post(requestData, function(error, response, body) {
+
+        if (error) {
+            callback(null, error);
+            return;
+        }
+
+        callback(response, null);
+    });
+}
+
+// =============================================================================
+// Express related routes
+// =============================================================================
 
 var app = express();
 
@@ -15,39 +49,17 @@ app.get("/oauth-callback", function (req, res) {
     // Obtain authorization code from URL
     let authCode = req.query.code;
     console.log("Gotten authorization code: " + authCode);
-    console.log("Host: " + req.headers.host)
-    console.log("Host name: " + req.headers.hostname)
-    
-    // Post data to exchange for an access token
-    const postData = queryString.stringify({
-        "client_id": "G8gnbczTX6mBQAg1Air5qMxHlgpk0bs3",
-        "client_secret": "K592544e7f3074d1",
-        "grant_type": "authorization_code",
-        "code": authCode,
-        "redirect_uri": req.headers.host
-    });
+    console.log("Host: " + req.headers.host);
 
-    // Call 'gettoken' endpoint to exchange for an access token
-    const options = {
-        hostname: "https://developer.api.autodesk.com",
-        path: "/authentication/v1/gettoken",
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Content-Length": Buffer.byteLength(postData)            
+    let redirectUrl = req.headers.host + "/";
+    exchangeForAccessToken(authCode, redirectUrl, function(accessToken, error) {
+        if (error) {
+            res.send(`Error received ${error}`);
+            return;
         }
-    };
 
-    const request = http.request(options, (response) => {
-        console.log(`Response status: ${response.statusCode}`);
-        console.log(`Response headers: ${JSON.stringify(response.headers)}`);
-
-        response.setEncoding("utf8");
-        response.on("data", (chunk) => {
-            console.log(`Response ${chunk}`);
-        });
-    });
-
+        res.send(`No error, received ${accessToken}`);
+    });    
 });
 
 app.listen(8088);
