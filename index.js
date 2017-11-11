@@ -2,7 +2,8 @@
 const express = require("express");
 const path = require("path");
 const request = require("request");
-const querystring = require('querystring');
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
 
 // =============================================================================
 // Helper/utility functions
@@ -48,6 +49,19 @@ function exchangeForAccessToken(authCode, callback) {
 // =============================================================================
 
 var app = express();
+
+app.use(cookieParser());
+
+app.use(session({
+    secret: "autodeskforge",
+    cookie: {
+      httpOnly: true,
+      secure: (process.env.NODE_ENV === "production"),
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours      
+    },
+    resave: false,
+    saveUninitialized: true
+}));
 
 app.get("/", function (req, res) {
     res.sendFile(path.join(__dirname, "login.html"));
