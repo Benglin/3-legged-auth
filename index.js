@@ -8,8 +8,8 @@ const querystring = require('querystring');
 // Helper/utility functions
 // =============================================================================
 
-function exchangeForAccessToken(authCode, redirectUrl,callback) {
-
+function exchangeForAccessToken(authCode, callback) {
+    
     let requestData = {
 
         url: "https://developer.api.autodesk.com/authentication/v1/gettoken",
@@ -19,7 +19,7 @@ function exchangeForAccessToken(authCode, redirectUrl,callback) {
             client_secret: "K592544e7f3074d1",
             grant_type: "authorization_code",
             code: authCode,
-            redirect_uri: redirectUrl
+            redirect_uri: "http://localhost:8088/oauth-callback"
         }
     };
 
@@ -30,7 +30,7 @@ function exchangeForAccessToken(authCode, redirectUrl,callback) {
             return;
         }
 
-        callback(response, null);
+        callback(body.toString(), null);
     });
 }
 
@@ -49,10 +49,8 @@ app.get("/oauth-callback", function (req, res) {
     // Obtain authorization code from URL
     let authCode = req.query.code;
     console.log("Gotten authorization code: " + authCode);
-    console.log("Host: " + req.headers.host);
 
-    let redirectUrl = req.headers.host + "/";
-    exchangeForAccessToken(authCode, redirectUrl, function(accessToken, error) {
+    exchangeForAccessToken(authCode, function(accessToken, error) {
         if (error) {
             res.send(`Error received ${error}`);
             return;
